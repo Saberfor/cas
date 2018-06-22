@@ -1,0 +1,7 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.example.casclient3.connect.CustomAuthConfig,\
+  com.example.casclient3.connect.SpringConfig,\
+  com.example.casclient3.MyModel.GxcWebflowConfiguration,\
+  com.example.casclient3.cookie.MyCookieConfiguration
+
+

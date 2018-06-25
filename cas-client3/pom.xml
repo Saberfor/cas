@@ -93,7 +93,6 @@
                         <overlay>
                             <groupId>org.apereo.cas</groupId>
                             <artifactId>cas-server-webapp${app.server}</artifactId>
-                            <version>${cas.version}</version>
                         </overlay>
                     </overlays>
                 </configuration>

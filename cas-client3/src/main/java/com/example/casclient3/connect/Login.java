@@ -1,6 +1,7 @@
 package com.example.casclient3.connect;
 
 import com.example.casclient3.MyModel.MyUsernamePasswordCredential;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apereo.cas.authentication.Credential;
 import org.apereo.cas.authentication.HandlerResult;
 import org.apereo.cas.authentication.PreventedException;
@@ -21,7 +22,7 @@ import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Login  extends AbstractUsernamePasswordAuthenticationHandler {
+public class Login  extends AbstractPreAndPostProcessingAuthenticationHandler {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Login.class);
 
@@ -29,7 +30,7 @@ public class Login  extends AbstractUsernamePasswordAuthenticationHandler {
         super(name, servicesManager, principalFactory, order);
     }
 
-    @Override
+    /*@Override
     protected HandlerResult authenticateUsernamePasswordInternal(UsernamePasswordCredential transformedCredential, String originalPassword) throws GeneralSecurityException, PreventedException {
         DriverManagerDataSource d=new DriverManagerDataSource();
         d.setDriverClassName("com.mysql.jdbc.Driver");
@@ -62,18 +63,28 @@ public class Login  extends AbstractUsernamePasswordAuthenticationHandler {
             return createHandlerResult(transformedCredential, principalFactory.createPrincipal(username, map), null);
         }
         throw new FailedLoginException("Sorry, login attemp failed.");
-    }
+    }*/
 
     @Override
     protected HandlerResult doAuthentication(Credential credential) throws GeneralSecurityException, PreventedException {
-        MyUsernamePasswordCredential mycredential1 = (MyUsernamePasswordCredential) credential;
 
-        String capcha = mycredential1.getCapcha();
-        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        String right = attributes.getRequest().getSession().getAttribute("capcha").toString();
-        if(!capcha.equalsIgnoreCase(right)){
-            System.out.println("验证码错误" + capcha);
-            throw new FailedLoginException("验证码错误");
+        String passwprd = "";
+        String username = "";
+        if (credential instanceof MyUsernamePasswordCredential){
+            MyUsernamePasswordCredential mycredential1 = (MyUsernamePasswordCredential) credential;
+            String capcha = mycredential1.getCapcha();
+            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            String right = attributes.getRequest().getSession().getAttribute("capcha").toString();
+            if(!capcha.equalsIgnoreCase(right)){
+                System.out.println("验证码错误" + capcha);
+                throw new FailedLoginException("验证码错误");
+            }
+            passwprd = mycredential1.getPassword();
+            username = mycredential1.getUsername();
+        } else {
+            UsernamePasswordCredential credential1 = (UsernamePasswordCredential)credential;
+            passwprd = credential1.getPassword();
+            username = credential1.getUsername();
         }
 
         DriverManagerDataSource d=new DriverManagerDataSource();
@@ -84,12 +95,8 @@ public class Login  extends AbstractUsernamePasswordAuthenticationHandler {
         JdbcTemplate template=new JdbcTemplate();
         template.setDataSource(d);
 
-
-
-
-        String username=mycredential1.getUsername();
         //查询数据库加密的的密码
-        Map<String,Object> user = template.queryForMap("SELECT `password` FROM app_user WHERE username = ?", mycredential1.getUsername());
+        Map<String,Object> user = template.queryForMap("SELECT `password` FROM app_user WHERE username = ?", username);
 
         if(user==null){
             throw new FailedLoginException("没有该用户");
@@ -100,15 +107,32 @@ public class Login  extends AbstractUsernamePasswordAuthenticationHandler {
         map.put("email", "3105747142@qq.com");
 
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        if(mycredential1.getPassword().equals(user.get("password").toString())){
-            return createHandlerResult(mycredential1, principalFactory.createPrincipal(username, map), null);
+        if(passwprd.equals(user.get("password").toString())){
+            if (credential instanceof MyUsernamePasswordCredential){
+                MyUsernamePasswordCredential mycredential1 = (MyUsernamePasswordCredential) credential;
+                return createHandlerResult(mycredential1, principalFactory.createPrincipal(username, map), null);
+            } else {
+            UsernamePasswordCredential credential1 = (UsernamePasswordCredential)credential;
+            return createHandlerResult(credential1, principalFactory.createPrincipal(username, map), null);
+        }
+
         }
         throw new FailedLoginException("Sorry, login attemp failed.");
     }
 
-    @Override
     public boolean supports(Credential credential) {
-        return credential instanceof MyUsernamePasswordCredential;
+        if (!UsernamePasswordCredential.class.isInstance(credential)) {
+            logger.debug("Credential is not one of username/password and is not accepted by handler [{}]", this.getName());
+            return false;
+        } else if (this.credentialSelectionPredicate == null) {
+            logger.debug("No credential selection criteria is defined for handler [{}]. Credential is accepted for further processing", this.getName());
+            return true;
+        } else {
+            logger.debug("Examining credential [{}] eligibility for authentication handler [{}]", credential, this.getName());
+            boolean result = this.credentialSelectionPredicate.test(credential);
+            logger.debug("Credential [{}] eligibility is [{}] for authentication handler [{}]", new Object[]{credential, this.getName(), BooleanUtils.toStringTrueFalse(result)});
+            return result;
+        }
     }
 }
 

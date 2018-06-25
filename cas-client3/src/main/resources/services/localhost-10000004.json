@@ -1,9 +1,10 @@
 {
   "@class" : "org.apereo.cas.services.RegexRegisteredService",
-  "serviceId" : "^http://www\\.gxc\\.com:9000.*",
+  "serviceId" : "^http://www\\.gxc\\.com:9001.*",
   "name" : "本地服务",
-  "id" : 10000003,
+  "id" : 10000004,
   "description" : "这事一个本地服务，通过localhost服务访问都可通过",
   "evaluationOrder" : 1,
-  "theme" : "gxc"
+  "theme" : "gxc-2"
 }
+

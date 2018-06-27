@@ -9,6 +9,7 @@
    </context-param>
 -->
 
+
     <filter>
         <filter-name>CAS Single Sign Out Filter</filter-name>
         <filter-class>org.jasig.cas.client.session.SingleSignOutFilter</filter-class>
@@ -29,6 +30,7 @@
         <init-param>
             <param-name>casServerLoginUrl</param-name>
             <param-value>https://www.gxc.com:9898/cas/login</param-value>
+            <!--<param-value>http://www.gxc.com:8080/cas</param-value>-->
         </init-param>
         <init-param>
             <param-name>serverName</param-name>
@@ -43,6 +45,7 @@
         <init-param>
             <param-name>casServerUrlPrefix</param-name>
             <param-value>https://www.gxc.com:9898/cas</param-value>
+            <!--<param-value>http://www.gxc.com:8080/cas</param-value>-->
         </init-param>
         <init-param>
             <param-name>serverName</param-name>
@@ -70,6 +73,10 @@
             <param-value>https://mmoayyed.unicon.net:9443/sample/proxyUrl</param-value>
         </init-param>
         -->
+        <init-param>
+            <param-name>encoding</param-name>
+            <param-value>UTF-8</param-value>
+        </init-param>
         <init-param>
             <param-name>authn_method</param-name>
             <param-value>mfa-duo</param-value>
